@@ -1,0 +1,176 @@
+a. terminologies
+S:current state, A:current action taken, R: reward for current (S,A) pair
+S':current state, A':next action to take  
+alpha: learning rate
+gamma: discount factor
+-The discount factor determines the importance of future rewards. A factor of 0 will make the agent short-sighted by only considering current rewards, while a factor approaching 1 will make it strive for a long-term high reward. If the discount factor exceeds 1, the action values may diverge.
+Q-value: the maximum expected future reward for an action at a given state
+
+
+
+b. on policy vs off policy
+-on policy methods are methods where the next action taken for the agent depends on the policy being updated
+-off policy methods are methods where the next action taken for the agent DOES NOT depend on the policy being updated
+*the policy here refers to the algorithm being used, e.g. SARSA, Q learning
+
+ON POLICY
+-In on-policy methods, such as SARSA and policy gradient methods, the next action selection is based on the current policy being updated. The agent interacts with the environment using its current policy, collects data (state-action pairs), and updates the policy based on the collected data. The next action selection is influenced by the current policy, which is being updated during the learning process.
+-e.g. SARSA
+    -in one episode step the algo goes thru a tuple (S,A,R,S',A') where the next action is already determined in the current state and the agent does indeed take this action in the next step
+
+-Pros:
+Better convergence: On-policy algorithms have a better convergence guarantee because they update their policy based on the data they collect from the current policy.
+Stability: Since on-policy algorithms optimize the policy they are currently using, they are more stable during training and less likely to diverge.
+Suitable for online learning: On-policy algorithms are suitable for online learning scenarios where the agent must continuously update its policy while interacting with the environment.
+
+-Cons:
+Exploration-exploitation trade-off: On-policy algorithms may struggle with the exploration-exploitation trade-off because they can only improve their policy based on the actions they take. This can limit their ability to explore new actions and potentially miss out on better policies.
+Sample inefficiency: On-policy algorithms can be sample inefficient since they can only learn from the data they collect during interaction with the environment. They may require more interactions to achieve optimal performance.
+Policy restriction: On-policy algorithms are restricted to improve the current policy, which means they may not be able to take advantage of better policies discovered during training.
+   
+   
+OFF POLICY
+-In off-policy methods, such as Q-learning and DQN, the next action selection is decoupled from the current policy being updated. The agent has a separate policy, often referred to as the target policy, that is used to select the next action. The agent collects data using a behavior policy, which may be different from the target policy, and uses this data to update the target policy. The behavior policy explores and gathers experiences, while the target policy is the one being learned and improved.
+-e.g. Q learning
+    -in one episode step, the algo only goes thru a tuple (S,A,R,S') and does not determine what the next action A' should be 
+
+-Pros:
+Exploration flexibility: Off-policy algorithms have more flexibility in exploration since they can collect data using an exploratory policy and update their policy based on the observed data.
+Sample efficiency: Off-policy algorithms can be more sample efficient since they can reuse data collected from different policies, potentially leading to faster learning.
+Handling of existing data: Off-policy algorithms can utilize existing data collected from other sources, making them suitable for utilizing pre-existing datasets.
+
+-Cons:
+Convergence challenges: Off-policy algorithms can face convergence challenges, especially in environments with high-dimensional or continuous action spaces.
+Importance sampling: Off-policy algorithms often rely on importance sampling techniques to correct for the discrepancy between the behavior policy (used for data collection) and the target policy (being updated). This can introduce additional complexity and variance.
+Unstable learning: Off-policy algorithms are more prone to instability and divergence, especially in the presence of high variance or errors in the importance sampling estimates.
+It's important to note that the suitability of on-policy or off-policy algorithms depends on the specific problem, environment, and available data. The choice between them should be based on the characteristics and requirements of the particular application.
+
+*both the Q value update formula in SARSA and Q learning includes a A'. Q learning calculates A' in the current step just like SARSA but unlike SARSA, the agent in Q learning does not necessarily take this A'. Its different for SARSA where the next action IS A' calculated in the current step. For Q learning, the next action to take depends on the epsilon greedy method to determine whether the next action is to explore the env or exploit the current knowledge.
+
+
+
+c. Model-based vs Model-free policies
+
+-MODEL BASED 
+Model-based RL involves learning a model of the environment dynamics. This model captures the transition probabilities between states and the rewards associated with state-action pairs. With a learned model, the agent can simulate different actions and predict the outcomes, allowing it to plan and make decisions accordingly. Model-based RL algorithms typically involve a two-step process: learning the model and then using the model for planning or decision-making.
+
+-MODEL FREE
+Model-free RL, on the other hand, directly learns a policy or value function without explicitly modeling the environment dynamics. It focuses on learning from interaction with the environment by observing states, taking actions, and receiving rewards. Model-free algorithms directly estimate the value function or policy based on the observed experiences. Examples of model-free RL algorithms include Q-learning, SARSA, and policy gradient methods.
+
+-The main difference between model-based and model-free RL lies in whether or not they rely on an explicitly learned model of the environment. Model-based RL requires learning the dynamics of the environment and uses the learned model for planning, while model-free RL learns directly from the experiences without explicitly building a model.
+
+
+
+1. SARSA
+-SARSA (State-Action-Reward-State-Action) is an on-policy algorithm used for reinforcement learning. It is a model-free algorithm that aims to learn the optimal policy for an agent to maximize cumulative rewards in a Markov Decision Process (MDP).
+-pseudocode
+    1. initialise Q values for all s-a pairs in Q table. Q(s,a)=0.
+    *episode loop
+    2. initialise starting state s, action a=pi(s) if needed (pi is is the SARSA learning policy - get the highest q value from q table)
+    (initialise only at start of episode, not at every training step)
+    3. generate sequence (s,a,r,s',a'), a'=pi(s')
+    4. update Q value formula
+    Q(s,a)=Q(s,a)+learning_rate(r+gamma*Q(s',a')-Q(s,a))
+    5. set new state and new action, s' and a', these new values will auto become state and action, s and a in next training step
+    s=s',a=a'
+    
+    
+
+2. Q learning 
+-Q-learning is an off-policy algorithm used for reinforcement learning. It is a model-free algorithm that aims to learn the optimal action-value function (Q-function) for an agent to maximize cumulative rewards in a Markov Decision Process (MDP).
+-calculates the maximum expected future reward for each action at each state
+-pseudocode
+    1. initialise Q values for all s-a pairs in Q table. Q(s,a)=0. set Behaviour policy pi (e.g. epsilon-greedy), this policy controls what actions to take at each training step, unlike SARSA where next action is predetermined in prev step, then choose action with highest reward
+    *episode loop
+    2. intialise starting state s if needed, action a=pi(s)
+    3. generate sequence (s,a,r,s'), dont generate a'. a was generated using behaviour policy (e.g. epsilon greedy mtd) 
+    4. update Q value formula
+    Q(s,a)=Q(s,a)+learning_rate(r+gamma*max_Q(s',:)-Q(s,a)) [Bellman Equation]
+    max_Q(s',:) means get the max q value out of all possible actions for the new state
+    python:  q_table[state,action]=q_table[state,action] + lr*(reward+gamma*np.max(q_table[new_state,:]) - q_table[state,action])
+    
+
+SARSA vs Q learning
+https://www.youtube.com/watch?v=-UohFVSjekI&t=326s&ab_channel=MarcusFong
+
+
+
+3. DQN - Deep Q networks
+https://www.youtube.com/watch?v=0bt0SjbS3xc&list=PLZbbT5o_s2xoWNVdDudn51XM8lOuZ_Njv&index=14&ab_channel=deeplizard
+-q-learning: action-state -> Q table -> Q value
+-DQN: state -> Neural Network -> linear layer of nodes where each node is the q value for an action. e.g. 4 discrete actions -> 
+4 q values->for nodes/neurons in final layer
+-pseudocode:
+    1. initialise q values in q table
+    2. choose action a for state s (highest q value) using NN [input: state s, output: q values for diff actions, choose action with highest q value]
+    3. perform action a and get new state s'
+    4. measure reward r
+    5. update weights of NN
+    
+   
+4. REINFORCE (an acronym) - simplest Policy Gradient method
+https://www.youtube.com/watch?v=5eSh5F8gjWU&ab_channel=AndriyDrozdyuk
+- the issue with implementing a NN in a typical RL env where its Agent>Env>Agent>Env>... is that the Env space itself is not a differentiable function. as such, you cant calc the gradient to do backpropagation to update the weights of the NN
+- so instead of using the output of the env to backprop thru env and then to agent (not possible), we make use of the rewards of actions
+- since you cant backprop thru the env (non-differentiable function) we use the rewards as a signal to guide the direction of our backprop algo
+-pseudocode:
+    1. initialise a differentiable policy (NN) pi(a|s,theta) where theta are the policy parameters
+    *episode loop
+        1. generate an entire episode s0,a0,r0,s1,a1,r1,s2,a2,r2,...,sT,aT,rT (T: terminal step) generate these s and a using policy pi
+        (this is called a trajectory)
+        2. after generating full episode trajectory then do this: Loop over each time step in episode
+            1. calc discounted returns, G=sum(reward@step  * discount factor for step in episode_steps)
+            2. update policy parameters, theta
+            theta=theta+LR*(gamma**t)*G*gradient(ln(pi(at|st,theta)) [this is log in python - log in python is natural log aka ln]
+            at here is the prob of the action taken at that time step, not the discrete action itself
+            how is it implemented?
+            calc loss = -log_prob*G (calc natural log of pi first) and then calc the gradient using pytorch loss.backward()
+            take -log_prob instead of positive because gradient descent will by default minimise the loss function but we are using the rewards to guide our weights and our aim is to maximise the rewards 
+-how do we select an action? we sample it
+    1. input: state -> NN -> output -> softmax function -> prob distribution of our discrete actions 
+    2. sample from the prob distribution (the action with higher probablity is more likely to be sampled)
+    usually after sampling you will calc the log_prob(action) which is natural log
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
