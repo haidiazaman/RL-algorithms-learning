@@ -132,7 +132,7 @@ https://www.youtube.com/watch?v=5eSh5F8gjWU&ab_channel=AndriyDrozdyuk
     usually after sampling you will calc the log_prob(action) which is natural log
         
 
-
+L in most RL math is called the objective function. This is the function used to optimise the NN.
 
 
 
